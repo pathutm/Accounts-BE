@@ -57,9 +57,23 @@ const InvoiceSchema = new Schema({
   },
   payment_history: [PaymentHistorySchema],
   derived_metrics: {
-    days_overdue: { type: Number, default: 0 }
+    // days_overdue is now a virtual field
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+InvoiceSchema.virtual('derived_metrics.days_overdue').get(function() {
+  if (this.payment && this.payment.status === 'PAID') return 0;
+  
+  const today = new Date();
+  if (this.due_date && today > this.due_date) {
+    return Math.ceil((today - this.due_date) / (1000 * 60 * 60 * 24));
+  }
+  return 0;
+});
 
 InvoiceSchema.pre("save", function (next) {
   this.payment.pending_amount = this.invoice_summary.grand_total - this.payment.paid_amount;
@@ -73,12 +87,7 @@ InvoiceSchema.pre("save", function (next) {
   }
 
   const today = new Date();
-  if (this.due_date && today > this.due_date) {
-    const diff = Math.ceil((today - this.due_date) / (1000 * 60 * 60 * 24));
-    this.derived_metrics.days_overdue = diff;
-  } else {
-    this.derived_metrics.days_overdue = 0;
-  }
+  // No longer saving days_overdue to the database
   next();
 });
 
