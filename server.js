@@ -11,6 +11,10 @@ const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
+const vendorRoutes = require('./routes/vendorRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
+const poRoutes = require('./routes/poRoutes');
+const organizationRoutes = require('./routes/organizationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +33,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/vendors', vendorRoutes);
+app.use('/api/budgets', budgetRoutes);
+app.use('/api/purchase-orders', poRoutes);
+app.use('/api/organization', organizationRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
