@@ -15,6 +15,7 @@ const vendorRoutes = require('./routes/vendorRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
 const poRoutes = require('./routes/poRoutes');
 const organizationRoutes = require('./routes/organizationRoutes');
+const purchaseInvoiceRoutes = require('./routes/purchaseInvoiceRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,6 +38,7 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/purchase-orders', poRoutes);
 app.use('/api/organization', organizationRoutes);
+app.use('/api/purchase-invoices', purchaseInvoiceRoutes);
 
 // Health Check
 app.get('/', (req, res) => {
