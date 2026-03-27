@@ -9,7 +9,7 @@ async function check() {
   
   const all = await collection.find({}).toArray();
   all.forEach((inv, i) => {
-    console.log(`INV ${i}: V=${inv.vendorId}, O=${inv.organizationId}, #=${inv.invoiceNumber}`);
+    console.log(`INV ${i}: V=${inv.vendorId}, O=${inv.organizationId}, #=${inv.invoiceNumber}, PO_ID=${inv.purchaseOrderId}`);
   });
 
   const users = await mongoose.connection.db.collection('users').find({}).toArray();

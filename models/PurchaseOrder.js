@@ -34,7 +34,7 @@ const PurchaseOrderSchema = new mongoose.Schema({
   notes: String,
   status: {
     type: String,
-    enum: ['PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'CANCELLED', 'PAID', 'SENT'],
+    enum: ['PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'CANCELLED', 'PAID', 'SENT', 'RECEIVED'],
     default: 'PENDING_APPROVAL'
   },
   webhook_response: {

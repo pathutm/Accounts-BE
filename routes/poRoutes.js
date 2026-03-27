@@ -6,5 +6,6 @@ const auth = require('../middleware/auth');
 router.post('/', auth, poController.createPO);
 router.get('/', auth, poController.getPOs);
 router.get('/:id', auth, poController.getPOById);
+router.get('/:id/match-data', auth, poController.getMatchData);
 
 module.exports = router;

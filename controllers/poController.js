@@ -1,4 +1,8 @@
+const mongoose = require('mongoose');
 const PurchaseOrder = require('../models/PurchaseOrder');
+const PurchaseInvoice = require('../models/PurchaseInvoice');
+const GRN = require('../models/GRN');
+const Vendor = require('../models/Vendor');
 
 exports.createPO = async (req, res) => {
   try {
@@ -43,15 +47,15 @@ exports.getPOs = async (req, res) => {
   try {
     const organizationId = req.user.id;
     const { role, vendorId: loggedInVendorId } = req.user;
-    
+
     console.log(`Fetching POs for OrgId: ${organizationId}, Role: ${role}`);
-    
+
     // Base Filter: All organization's POs
-    const orgFilter = { 
+    const orgFilter = {
       $or: [
         { organizationId: organizationId },
         { organizationId: organizationId.toString() }
-      ] 
+      ]
     };
 
     // Define final query
@@ -99,7 +103,7 @@ exports.getPOById = async (req, res) => {
 
     // If vendor, they can only see their own PO
     if (role === 'vendor' && loggedInVendorId) {
-       baseQuery.vendorId = loggedInVendorId;
+      baseQuery.vendorId = loggedInVendorId;
     }
 
     const po = await PurchaseOrder.findOne(baseQuery).lean();
@@ -118,6 +122,51 @@ exports.getPOById = async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching PO by ID:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getMatchData = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Fetch Purchase Order
+    const po = await PurchaseOrder.findById(id).lean();
+    if (!po) {
+      return res.status(404).json({ message: 'Purchase Order not found' });
+    }
+
+    // 2. Fetch all Invoices linked to this PO
+    // Handle both ObjectId and String formats due to potential raw database insertions
+    const invoices = await PurchaseInvoice.find({ 
+      $or: [
+        { purchaseOrderId: id },
+        { purchaseOrderId: new mongoose.Types.ObjectId(id) }
+      ]
+    }).lean();
+
+    // 3. Fetch all GRNs linked to this PO
+    const grns = await GRN.find({ 
+      $or: [
+        { purchaseOrderId: id },
+        { purchaseOrderId: new mongoose.Types.ObjectId(id) },
+        { poNumber: po.po_number } // Extra layer of redundancy if ID is missing but number exists
+      ]
+    }).lean();
+
+    // 4. Enrich with Vendor Info
+    const vendorData = await Vendor.findById(po.vendorId).lean();
+
+    res.json({
+      purchase_order: {
+        ...po,
+        vendor: vendorData || { vendor_legal_name: 'Unknown Vendor' }
+      },
+      purchase_invoices: invoices,
+      grns: grns
+    });
+  } catch (err) {
+    console.error('Error fetching match data:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

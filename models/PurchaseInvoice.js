@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const PurchaseInvoiceSchema = new mongoose.Schema({
   vendorId: { type: String, required: true },
   organizationId: { type: String, required: true },
-  purchaseOrderId: { type: String },
+  purchaseOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'PurchaseOrder' },
   
   invoiceNumber: { type: String, required: true },
   invoiceDate: { type: Date, required: true },
