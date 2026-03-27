@@ -14,7 +14,9 @@ const ItemSchema = new Schema({
     tax_breakup: {
       cgst: { type: Number, default: 0 },
       sgst: { type: Number, default: 0 },
-      igst: { type: Number, default: 0 }
+      igst: { type: Number, default: 0 },
+      gst: { type: Number, default: 0 },
+      cess: { type: Number, default: 0 }
     },
     total: { type: Number, required: true }
   }
@@ -29,7 +31,7 @@ const PaymentHistorySchema = new Schema({
 
 const InvoiceSchema = new Schema({
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
-  invoice_id: { type: String, required: true, unique: true },
+  invoice_id: { type: String, required: true },
   customer_id: { type: String, required: true, index: true },
   invoice_date: { type: Date, required: true },
   due_date: { type: Date, required: true },
@@ -41,7 +43,9 @@ const InvoiceSchema = new Schema({
     tax_breakup: {
       total_cgst: { type: Number, default: 0 },
       total_sgst: { type: Number, default: 0 },
-      total_igst: { type: Number, default: 0 }
+      total_igst: { type: Number, default: 0 },
+      total_gst: { type: Number, default: 0 },
+      total_cess: { type: Number, default: 0 }
     },
     grand_total: { type: Number, required: true }
   },
@@ -65,6 +69,9 @@ const InvoiceSchema = new Schema({
   toObject: { virtuals: true }
 });
 
+// Composite unique index for invoice_id per organization
+InvoiceSchema.index({ organizationId: 1, invoice_id: 1 }, { unique: true });
+
 InvoiceSchema.virtual('derived_metrics.days_overdue').get(function() {
   if (this.payment && this.payment.status === 'PAID') return 0;
   
@@ -75,7 +82,7 @@ InvoiceSchema.virtual('derived_metrics.days_overdue').get(function() {
   return 0;
 });
 
-InvoiceSchema.pre("save", function (next) {
+InvoiceSchema.pre("save", async function () {
   this.payment.pending_amount = this.invoice_summary.grand_total - this.payment.paid_amount;
   
   if (this.payment.paid_amount === 0) {
@@ -85,10 +92,6 @@ InvoiceSchema.pre("save", function (next) {
   } else {
     this.payment.status = "PARTIALLY_PAID";
   }
-
-  const today = new Date();
-  // No longer saving days_overdue to the database
-  next();
 });
 
 module.exports = mongoose.model("Invoice", InvoiceSchema);
